@@ -1,0 +1,15 @@
+{
+	"compilerOptions": {
+		"strict": true,
+		"module": "CommonJS",
+		"moduleResolution": "Node10",
+		"target": "ES2022",
+		"outDir": "./dist",
+		"declaration": true,
+		"skipLibCheck": true,
+    "sourceMap": true,
+		"noImplicitAny": true,
+		"allowSyntheticDefaultImports": true
+	},
+	"include": ["src"],
+}
