@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.FireSocket = void 0;
 const database_1 = require("firebase/database");
 const uuid_1 = require("uuid");
 const app_1 = require("firebase/app");
@@ -13,10 +14,10 @@ class FireSocket {
     _roomsRef;
     _rooms = new Map();
     _socketIdMap = new Map();
-    constructor(databaseURL) {
+    constructor(databaseURL, root = '/') {
         this._id = (0, uuid_1.v4)();
         this._db = this.initializeDb(databaseURL);
-        this._root = (0, database_1.ref)(this._db, "/");
+        this._root = (0, database_1.ref)(this._db, root);
         this._socketsRef = (0, database_1.child)(this._root, "sockets");
         this._eventsRef = (0, database_1.child)(this._root, "events");
         this._roomsRef = (0, database_1.child)(this._root, "rooms");
@@ -45,7 +46,7 @@ class FireSocket {
                 const roomKeys = Object.keys(rooms);
                 roomKeys.forEach((roomKey) => {
                     const room = rooms[roomKey];
-                    const members = Object.keys(room.sockets);
+                    const members = Object.values(room.sockets);
                     this._rooms.set(roomKey, members);
                 });
                 callback(this._rooms);
@@ -61,14 +62,16 @@ class FireSocket {
             const newSocketRef = (0, database_1.child)(this._socketsRef, this._id);
             await (0, database_1.set)(newSocketRef, { createdAt: new Date().toISOString() });
             this._connected = true;
-            (0, database_1.onDisconnect)(newSocketRef).remove();
+            (0, database_1.onDisconnect)(newSocketRef).remove().then(() => {
+                this.emit('disconnect', { id: this.id });
+            });
             (0, database_1.onValue)(this._roomsRef, (snapshot) => {
                 if (snapshot.exists()) {
                     const rooms = snapshot.val();
                     const roomKeys = Object.keys(rooms);
                     roomKeys.forEach((roomKey) => {
                         const room = rooms[roomKey];
-                        const members = Object.keys(room.sockets);
+                        const members = Object.values(room.sockets);
                         this._rooms.set(roomKey, members);
                     });
                 }
@@ -108,12 +111,14 @@ class FireSocket {
             console.error(error);
         }
     }
-    async join(room) {
+    async join(room, data = {}) {
         room = room.replace(/[^a-zA-Z0-9]/g, "");
         try {
             const memberRef = (0, database_1.child)(this._roomsRef, `${room}/sockets/${this.id}`);
-            await (0, database_1.set)(memberRef, { id: this.id, createdAt: new Date().toISOString() });
-            (0, database_1.onDisconnect)(memberRef).remove();
+            await (0, database_1.set)(memberRef, { id: this.id, createdAt: new Date().toISOString(), ...data });
+            (0, database_1.onDisconnect)(memberRef).remove().then(() => {
+                this.emit('disconnect', { id: this.id });
+            });
         }
         catch (error) {
             console.error(error);
@@ -240,5 +245,5 @@ class FireSocket {
         }
     }
 }
-exports.default = FireSocket;
+exports.FireSocket = FireSocket;
 //# sourceMappingURL=index.js.map

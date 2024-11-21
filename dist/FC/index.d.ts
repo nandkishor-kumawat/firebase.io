@@ -8,16 +8,16 @@ declare class FireSocket {
     private _roomsRef;
     private _rooms;
     private _socketIdMap;
-    constructor(databaseURL: string);
+    constructor(databaseURL: string, root?: string);
     get id(): string;
     get connected(): boolean;
     getSockets(callback: (sockets: any[]) => void): void;
-    getRooms(callback: (rooms: Map<string, string[]>) => void): void;
+    getRooms(callback: (rooms: Map<string, Array<Record<string, string>>>) => void): void;
     private initializeDb;
     private createSocketId;
     disconnect(): boolean | undefined;
     emit(event: string, data: Record<string, any>): Promise<void>;
-    join(room: string): Promise<void>;
+    join(room: string, data?: Record<string, any>): Promise<void>;
     toRoom(room: string): {
         emit: (event: string, data: any) => Promise<void>;
     };
@@ -29,4 +29,4 @@ declare class FireSocket {
     off(event: string, callback: (data: any) => void): void;
     leave(room: string): Promise<void>;
 }
-export default FireSocket;
+export { FireSocket };

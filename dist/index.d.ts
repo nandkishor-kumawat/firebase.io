@@ -1,2 +1,2 @@
-import FireSocket from "./FC";
+import { FireSocket } from "./FC";
 export { FireSocket as default };
